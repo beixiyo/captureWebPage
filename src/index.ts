@@ -1,21 +1,29 @@
 import { initBrowser, createPage, getResources } from './browser'
 import { downloadResource } from './downloader'
 import { createDirectory, getResourcePath, writeFile, updateHtmlContent, getOutputDir, getAvailableDirName } from './fileManager'
-import { Resource } from './types'
+import { Resource, type BrowserFactory } from './types'
 import path from 'node:path'
 
+
+export interface CaptureWebPageOptions {
+  outputDir?: string
+  timeout?: number
+  downloadResources?: boolean
+  browserFactory?: BrowserFactory
+}
 
 export async function captureWebPage(url: string, options: CaptureWebPageOptions = {}) {
   const {
     outputDir: baseOutputDir = './output',
     timeout = 30000,
-    downloadResources = true
+    downloadResources = true,
+    browserFactory = () => Promise.resolve(null as any),
   } = options
 
   console.log(`开始处理URL: ${url}`)
   try {
     console.log('正在初始化浏览器...')
-    const browser = await initBrowser()
+    const browser = await initBrowser(browserFactory)
     const page = await createPage(browser)
 
     console.log('正在访问目标页面...')
@@ -72,23 +80,3 @@ export async function captureWebPage(url: string, options: CaptureWebPageOptions
 
 
 export * from './types'
-
-export interface CaptureWebPageOptions {
-  /**
-   * 输出目录路径
-   * @default './output'
-   */
-  outputDir?: string
-
-  /**
-   * 页面加载超时时间(毫秒)
-   * @default 30000
-   */
-  timeout?: number
-
-  /**
-   * 是否下载外部资源
-   * @default true
-   */
-  downloadResources?: boolean
-}

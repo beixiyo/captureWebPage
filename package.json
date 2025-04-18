@@ -24,12 +24,9 @@
     "webpage",
     "download"
   ],
-  "dependencies": {
-    "puppeteer-core": "^21.5.2"
-  },
   "devDependencies": {
     "@types/node": "^20.9.2",
-    "@types/puppeteer-core": "^7.0.4",
+    "puppeteer-core": "^24.6.1",
     "typescript": "^5.2.2"
   },
   "packageManager": "pnpm@8.10.0"

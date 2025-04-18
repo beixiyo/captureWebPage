@@ -1,13 +1,13 @@
-import puppeteer, { type Browser, type Page } from 'puppeteer-core'
-import { ResourceMap } from './types'
+import type { Browser, Page } from 'puppeteer-core'
+import { ResourceMap, type BrowserFactory } from './types'
 
-export async function initBrowser() {
-  return await puppeteer.launch({
-    executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
-    headless: true,
-    timeout: 1000 * 60 * 10,
-    protocolTimeout: 1000 * 60 * 10,
-  })
+export async function initBrowser(createBrowser: BrowserFactory) {
+  const b = await createBrowser()
+  if (!b) {
+    throw new Error('Please provide a valid browser instance')
+  }
+
+  return b
 }
 
 export async function createPage(browser: Browser) {

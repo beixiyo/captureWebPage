@@ -2,6 +2,7 @@
 
 import { parseArgs } from 'node:util'
 import { captureWebPage, CaptureWebPageOptions } from './'
+import puppeteer from 'puppeteer-core'
 
 const { values, positionals } = parseArgs({
   args: process.argv.slice(2),
@@ -39,7 +40,15 @@ if (values.help || positionals.length === 0) {
 
 const options: CaptureWebPageOptions = {
   outputDir: values.output,
-  timeout: values.timeout ? parseInt(values.timeout) : undefined
+  timeout: values.timeout ? parseInt(values.timeout) : undefined,
+  browserFactory: async () => {
+    return puppeteer.launch({
+      executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
+      headless: true,
+      timeout: 1000 * 60 * 10,
+      protocolTimeout: 1000 * 60 * 10,
+    })
+  }
 }
 
 captureWebPage(positionals[0], options)

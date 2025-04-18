@@ -1,3 +1,5 @@
+import type { Browser } from 'puppeteer-core'
+
 export interface Resource {
   url: string
   type: 'scripts' | 'styles' | 'prefetch'
@@ -9,3 +11,5 @@ export interface ResourceMap {
   styles: string[]
   prefetch: string[]
 }
+
+export type BrowserFactory = () => Promise<Browser>
