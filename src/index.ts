@@ -4,18 +4,29 @@ import { createDirectory, getResourcePath, writeFile, updateHtmlContent, getOutp
 import { Resource } from './types'
 import path from 'node:path'
 
-async function captureHtml(url: string) {
+
+export async function captureWebPage(url: string, options: CaptureWebPageOptions = {}) {
+  const {
+    outputDir: baseOutputDir = './output',
+    timeout = 30000,
+    downloadResources = true
+  } = options
+
   console.log(`开始处理URL: ${url}`)
   try {
     console.log('正在初始化浏览器...')
     const browser = await initBrowser()
     const page = await createPage(browser)
+
     console.log('正在访问目标页面...')
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 1000 * 10 * 60, })
+    await page.goto(url, {
+      waitUntil: 'networkidle0',
+      timeout
+    })
 
     console.log('正在创建输出目录...')
     const outputDirName = getOutputDir(url)
-    const outputDir = path.join(process.cwd(), outputDirName)
+    const outputDir = path.join(process.cwd(), baseOutputDir, outputDirName)
     createDirectory(outputDir)
 
     console.log('正在获取页面资源...')
@@ -24,44 +35,59 @@ async function captureHtml(url: string) {
     console.log(`找到资源数量: scripts=${resources.scripts.length}, styles=${resources.styles.length}, prefetch=${resources.prefetch.length}`)
     let html = await page.content()
 
-    console.log('开始下载资源...')
-    const newPage = await createPage(browser)
-    for (const type of ['scripts', 'styles', 'prefetch'] as const) {
-      console.log(`\n处理 ${type} 类型资源:`)
-      for (const url of resources[type]) {
-        if (!url) continue
-        console.log(`  正在处理: ${url}`)
-        const resource: Resource = { url, type }
-        try {
-          const content = await downloadResource(newPage, resource, url)
-          resource.localPath = path.relative(outputDir, getResourcePath(resource, outputDir))
-          writeFile(path.join(outputDir, resource.localPath), content)
-          html = updateHtmlContent(html, resource)
-        }
-        catch (error) {
-          console.error(`Failed to process resource ${url}:`, error)
-          // 继续处理其他资源
-          continue
+    if (downloadResources) {
+      console.log('开始下载资源...')
+      const newPage = await createPage(browser)
+      for (const type of ['scripts', 'styles', 'prefetch'] as const) {
+        console.log(`\n处理 ${type} 类型资源:`)
+        for (const url of resources[type]) {
+          if (!url) continue
+          console.log(`  正在处理: ${url}`)
+          const resource: Resource = { url, type }
+          try {
+            const content = await downloadResource(newPage, resource, url)
+            resource.localPath = path.relative(outputDir, getResourcePath(resource, outputDir))
+            writeFile(path.join(outputDir, resource.localPath), content)
+            html = updateHtmlContent(html, resource)
+          }
+          catch (error) {
+            console.error(`Failed to process resource ${url}:`, error)
+            continue
+          }
         }
       }
     }
 
     // 保存HTML文件
     writeFile(path.join(outputDir, 'index.html'), html)
-    console.log(`HTML content has been saved to ${outputDirName}/index.html`)
+    console.log(`HTML content has been saved to ${path.join(baseOutputDir, outputDirName)}/index.html`)
 
     await browser.close()
   } catch (error) {
-    console.error('Error:', error)
-    process.exit(1)
+    console.error('处理过程中出错:', error)
+    throw error
   }
 }
 
-const url = process.argv[2]
-if (!url) {
-  console.error('Please provide a URL as an argument')
-  console.log('Usage: pnpm start <url>')
-  process.exit(1)
-}
 
-captureHtml(url)
+export * from './types'
+
+export interface CaptureWebPageOptions {
+  /**
+   * 输出目录路径
+   * @default './output'
+   */
+  outputDir?: string
+
+  /**
+   * 页面加载超时时间(毫秒)
+   * @default 30000
+   */
+  timeout?: number
+
+  /**
+   * 是否下载外部资源
+   * @default true
+   */
+  downloadResources?: boolean
+}
