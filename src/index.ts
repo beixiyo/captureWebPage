@@ -5,26 +5,32 @@ import { Resource } from './types'
 import path from 'node:path'
 
 async function captureHtml(url: string) {
+  console.log(`开始处理URL: ${url}`)
   try {
+    console.log('正在初始化浏览器...')
     const browser = await initBrowser()
     const page = await createPage(browser)
+    console.log('正在访问目标页面...')
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 1000 * 10 * 60, })
 
-    // 根据URL创建输出目录
+    console.log('正在创建输出目录...')
     const outputDirName = getOutputDir(url)
     const outputDir = path.join(process.cwd(), outputDirName)
     createDirectory(outputDir)
 
-    // 获取所有资源URL
+    console.log('正在获取页面资源...')
     const urlObj = new URL(url)
     const resources = await getResources(page, urlObj.origin)
+    console.log(`找到资源数量: scripts=${resources.scripts.length}, styles=${resources.styles.length}, prefetch=${resources.prefetch.length}`)
     let html = await page.content()
 
-    // 下载并保存资源
+    console.log('开始下载资源...')
     const newPage = await createPage(browser)
     for (const type of ['scripts', 'styles', 'prefetch'] as const) {
+      console.log(`\n处理 ${type} 类型资源:`)
       for (const url of resources[type]) {
         if (!url) continue
+        console.log(`  正在处理: ${url}`)
         const resource: Resource = { url, type }
         try {
           const content = await downloadResource(newPage, resource, url)

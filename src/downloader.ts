@@ -4,6 +4,7 @@ import { Resource } from './types'
 export async function downloadResource(page: Page, resource: Resource, baseUrl: string): Promise<string> {
   try {
     const absoluteUrl = new URL(resource.url, baseUrl).href
+    console.log(`    开始下载: ${absoluteUrl}`)
 
     const response = await page.goto(absoluteUrl, {
       timeout: 1000 * 10 * 60,
@@ -16,10 +17,11 @@ export async function downloadResource(page: Page, resource: Resource, baseUrl: 
     if (!content) {
       throw new Error(`Failed to get content from: ${absoluteUrl}`)
     }
+    console.log(`    下载完成: ${absoluteUrl}`)
     return content.toString()
   }
   catch (error) {
-    console.error(`Error downloading resource ${resource.url}:`, error)
-    throw error // 向上抛出错误以便调用者处理
+    console.error(`    下载失败: ${resource.url}`, error)
+    throw error
   }
 }
