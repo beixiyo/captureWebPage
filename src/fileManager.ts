@@ -45,15 +45,46 @@ export function updateHtmlContent(html: string, resource: Resource): string {
   return html.replace(resource.url, resource.localPath || resource.url)
 }
 
+/**
+ * 获取可用的目录名，如果目录已存在则添加数字后缀
+ */
+export function getAvailableDirName(basePath: string, dirName: string): string {
+  if (!fs.existsSync(path.join(basePath, dirName))) {
+    return dirName
+  }
+
+  let counter = 2
+  let newDirName = `${dirName}(${counter})`
+
+  while (fs.existsSync(path.join(basePath, newDirName))) {
+    counter++
+    newDirName = `${dirName}(${counter})`
+  }
+
+  return newDirName
+}
+
 export function getOutputDir(url: string): string {
   try {
     const urlObj = new URL(url)
-    const pathSegments = urlObj.hash.split('/')
-    // 获取最后一个非空路径段
-    const lastSegment = pathSegments.filter(segment => segment && segment !== '#').pop() || 'output'
-    // 解码URL编码的字符
-    return decodeURIComponent(lastSegment)
-  } catch (error) {
-    return 'output'
+    // 获取 hash 部分（去掉开头的 #）并按 / 分割
+    const hashPath = urlObj.hash.replace(/^#/, '')
+    const pathSegments = hashPath.split('/').filter(segment => segment)
+
+    // 如果 hash 路径存在，使用最后一个路径段
+    if (pathSegments.length > 0) {
+      return decodeURIComponent(pathSegments[pathSegments.length - 1])
+    }
+
+    // 如果没有 hash 路径，则尝试使用 pathname 的最后一段（排除文件名）
+    const pathnameSegments = urlObj.pathname
+      .split('/')
+      .filter(segment => segment && !segment.includes('.'))
+
+    return pathnameSegments.pop() || urlObj.hostname
+  }
+  catch (error) {
+    // URL 解析失败时返回默认值
+    return 'unknown'
   }
 }

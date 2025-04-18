@@ -1,6 +1,6 @@
 import { initBrowser, createPage, getResources } from './browser'
 import { downloadResource } from './downloader'
-import { createDirectory, getResourcePath, writeFile, updateHtmlContent, getOutputDir } from './fileManager'
+import { createDirectory, getResourcePath, writeFile, updateHtmlContent, getOutputDir, getAvailableDirName } from './fileManager'
 import { Resource } from './types'
 import path from 'node:path'
 
@@ -25,7 +25,8 @@ export async function captureWebPage(url: string, options: CaptureWebPageOptions
     })
 
     console.log('正在创建输出目录...')
-    const outputDirName = getOutputDir(url)
+    const baseDirName = getOutputDir(url)
+    const outputDirName = getAvailableDirName(path.join(process.cwd(), baseOutputDir), baseDirName)
     const outputDir = path.join(process.cwd(), baseOutputDir, outputDirName)
     createDirectory(outputDir)
 

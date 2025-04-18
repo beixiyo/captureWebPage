@@ -1,4 +1,4 @@
-# catch-html
+# capture-web-page
 
 一个基于 Puppeteer 的网页内容抓取工具，可以将网页及其相关资源（JS、CSS等）保存到本地。
 
