@@ -4,7 +4,7 @@ import { ResourceMap } from './types'
 export async function initBrowser() {
   return await puppeteer.launch({
     executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe',
-    headless: false,
+    headless: true,
     timeout: 1000 * 60 * 10,
     protocolTimeout: 1000 * 60 * 10,
   })
@@ -43,7 +43,8 @@ export async function getResources(page: Page, prefix: string = ''): Promise<Res
 
       return {
         scripts: getUrls('script[src]', 'src'),
-        styles: getUrls('link[rel="stylesheet"]', 'href')
+        styles: getUrls('link[rel="stylesheet"]', 'href'),
+        prefetch: getUrls('link[rel="prefetch"]', 'href')
       }
     },
     prefix

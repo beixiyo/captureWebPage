@@ -22,7 +22,7 @@ async function captureHtml(url: string) {
 
     // 下载并保存资源
     const newPage = await createPage(browser)
-    for (const type of ['scripts', 'styles'] as const) {
+    for (const type of ['scripts', 'styles', 'prefetch'] as const) {
       for (const url of resources[type]) {
         if (!url) continue
         const resource: Resource = { url, type }
